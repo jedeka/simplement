@@ -1,0 +1,25 @@
+# basics
+numpy
+matplotlib
+torch
+torchvision
+torchmetrics
+tensorboard
+jupyter
+notebook 
+seaborn 
+scipy 
+tqdm 
+opencv-python
+wandb
+
+# Computer Vision
+
+# NLP & speech 
+spacy 
+datasets
+tokenizers 
+
+
+# RL
+gymnasium
