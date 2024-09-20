@@ -7,15 +7,20 @@ class FeedForwardBlock(nn.Module):
     """Feedforward block"""
     def __init__(self, d_model, d_ff, dropout):
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(d_model, d_ff), 
-            nn.Dropout(dropout), 
-            nn.Linear(d_ff, d_model)
-        )
+        # self.net = nn.Sequential(
+        #     nn.Linear(d_model, d_ff), 
+        #     nn.Dropout(dropout), 
+        #     nn.Linear(d_ff, d_model)
+        # )
+        self.linear_1 = nn.Linear(d_model, d_ff) 
+        self.dropout = nn.Dropout(dropout) 
+        self.linear_2 = nn.Linear(d_ff, d_model)
         
     def forward(self, x):
         # shape: (batch, seq_len, d_model) -> (batch, seq_len, d_ff) ->  (batch, seq_len, d_model)
-        return self.net(x)
+        # return self.net(x)
+        return self.linear_2(self.dropout(torch.relu(self.linear_1(x))))
+
 
 class InputEmbedding(nn.Module):
     """Embedding layers, @paper section 3.4"""
@@ -39,19 +44,19 @@ class PositionalEncoding(nn.Module):
         self.d_model = d_model
         self.seq_len = seq_len
         self.dropout = nn.Dropout(dropout)
-
+        
+        # positional encoding matrix 
         pe = torch.zeros(seq_len, d_model)
         
-        # TODO: why this is shaped this way? 
         # numerator
         pos = torch.arange(0, seq_len, dtype=torch.float).unsqueeze(1)
         # denominator 
         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
         
         # wave functions
-        pe[:, 0::2] = torch.sin(pos * div_term) # even indexes
-        pe[:, 1::2] = torch.cos(pos * div_term) # odd indexes
-        pe = pe.unsqueeze(0)
+        pe[:, 0::2] = torch.sin(pos * div_term) # even indexes -> sine
+        pe[:, 1::2] = torch.cos(pos * div_term) # odd indexes -> cosine
+        pe = pe.unsqueeze(0) # shape: (1, seq_len, d_model)
 
         # register_buffer() to include non-learnable tensor inside the module during saving 
         self.register_buffer('pe', pe)
@@ -60,7 +65,6 @@ class PositionalEncoding(nn.Module):
     def forward(self, x):
         x += (self.pe[:, :x.shape[1], :]).requires_grad_(False)
         x = self.dropout(x)
-
         return x 
 
 class LayerNorm(nn.Module):
@@ -97,16 +101,16 @@ class MultiHeadAttention(nn.Module):
         super().__init__()
         self.d_model = d_model
         self.h = h 
-        
         assert d_model % h == 0, "d_model is not divisible by h"
+        
         self.d_k = d_model // h
         
         # for learned linear projections for q, k, v
-        self.W_q = nn.Linear(d_model, d_model)  
-        self.W_k = nn.Linear(d_model, d_model)  
-        self.W_v = nn.Linear(d_model, d_model) 
+        self.W_q = nn.Linear(d_model, d_model, bias=False)  
+        self.W_k = nn.Linear(d_model, d_model, bias=False)  
+        self.W_v = nn.Linear(d_model, d_model, bias=False) 
     
-        self.W_o = nn.Linear(d_model, d_model)
+        self.W_o = nn.Linear(d_model, d_model, bias=False)
 
         self.dropout = nn.Dropout(dropout)
     
@@ -128,10 +132,11 @@ class MultiHeadAttention(nn.Module):
 
         if mask is not None:
             attention_scores.masked_fill(mask == 0, -1e9)
-        attention_scores = attention_scores.softmax(dim=-1)
+        attention_scores = attention_scores.softmax(dim=-1) # shape: (batch, h, seq_len, seq_len)
         if dropout is not None:
             attention_scores = dropout(attention_scores)
-
+        
+        # value: input vector, (attn_scores @ value): attention-weighted input vector
         return (attention_scores @ value), attention_scores    
     
     def forward(self, q, k, v, mask):
@@ -140,6 +145,7 @@ class MultiHeadAttention(nn.Module):
             where head_i = Attention(Q @ WQ_i, K @ WK_i, V @ WV_i)
         """
         
+        # embed q, k, v
         # size: (batch, seq_len, d_model) -> (batch, seq_len, d_model)
         query = self.W_q(q) 
         key = self.W_k(k) 

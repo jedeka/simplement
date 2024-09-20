@@ -43,6 +43,8 @@ from pathlib import Path
 
 from utils import TIMESTAMP
 
+# torch.cuda.set_per_process_memory_fraction(0.7)
+
 device = torch.device(f'cuda' if torch.cuda.is_available() else 'cpu')
 
 def get_all_sentences(dataset, lang):
@@ -159,7 +161,9 @@ def eval(
         console_width = 80
     
     with torch.no_grad():
-        for batch in trange(val_dl, desc='Eval batch', colour='red'):
+        # batch_iter = tqdm(enumerate(val_dl), colour='red')
+        # for batch in trange(val_dl, desc='Eval batch', colour='red'):
+        for i, batch in enumerate(val_dl):
             count += 1
             enc_input = batch['encoder_input'].to(device)
             enc_mask = batch['encoder_mask'].to(device)
@@ -308,5 +312,3 @@ if __name__== '__main__':
     config = vars(args)
     train(config)
     
-
-

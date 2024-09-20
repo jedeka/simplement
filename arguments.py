@@ -33,8 +33,8 @@ def add_common_args(parser):
 
 def add_model_args(parser):
     # training related args
-    parser.add_argument('-ep', '--epochs', type=int, default=10)
-    parser.add_argument('-b', '--batch_size', type=int, default=1024)
+    parser.add_argument('-ep', '--epochs', type=int, default=20)
+    parser.add_argument('-b', '--batch_size', type=int, default=8)
     parser.add_argument('-seed', '--seed', type=int, default=None)
     parser.add_argument('-lr', '--lr', type=float, default=1e-4)
     
@@ -43,7 +43,6 @@ def add_model_args(parser):
     parser.add_argument('-lr' '--lr', type=int, default=1e-3)
     parser.add_argument('-seqlen', '--seq_len', type=int, default=350)
 
-    
     
 
 def get_ckpt_path(config, epoch):
