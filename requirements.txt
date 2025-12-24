@@ -4,6 +4,8 @@ seaborn
 torch
 torchvision
 transformers
+datasets
+diffusers
 scipy
 scikit-learn
 scikit-image
@@ -22,3 +24,5 @@ plotly
 pygame
 swig
 mediapy
+uv
+wandb

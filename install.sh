@@ -3,7 +3,7 @@
 #########
 # setup.py
 #########
-pip install -e .
+pip install -e . --no-cache-dir
 
 
 #########

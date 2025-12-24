@@ -13,7 +13,7 @@ setup(
     # description="",
     # author="",
     # python_requires=">=3.10",
-    # install_requires=get_requirements(),
+    install_requires=get_requirements(),
     packages=find_packages(),
     # packages=find_packages(include=['src', 'src.*']),
     # packages=find_packages(where="src"),
